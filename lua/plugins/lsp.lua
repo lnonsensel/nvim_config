@@ -19,7 +19,15 @@ return {
             },
           },
         },
-        pyright = {
+        basedpyright = {
+          -- Ставится через `uv tool install basedpyright`, а не через Mason.
+          -- Без mason=false LazyVim передаёт включение сервера в
+          -- mason-lspconfig.automatic_enable (lsp/init.lua:257), а тот
+          -- поднимает только то, что установлено самим Mason, — и сервер
+          -- молча не стартует.
+          mason = false,
+
+          -- Не поднимать отдельный инстанс на файлах зависимостей.
           root_dir = function(bufnr, on_dir)
             local fname = vim.api.nvim_buf_get_name(bufnr)
             if fname:match("site%-packages") or fname:match("/%.venv/") then
@@ -28,9 +36,17 @@ return {
             on_dir(vim.fs.root(bufnr, { "pyproject.toml", "setup.py", ".git" }))
           end,
           settings = {
-            python = {
+            basedpyright = {
               analysis = {
+                -- basedpyright по умолчанию работает в режиме "recommended":
+                -- на обычном нетипизированном коде это даёт warning практически
+                -- на каждый параметр без аннотации ("Type of parameter is unknown",
+                -- "Return type is Any"). "standard" соответствует поведению
+                -- обычного pyright.
+                typeCheckingMode = "standard",
                 diagnosticSeverityOverrides = {
+                  -- неиспользуемые импорты и переменные ловит ruff (F401/F841),
+                  -- иначе одна и та же проблема показывается дважды
                   reportUnusedImport = "none",
                   reportUnusedVariable = "none",
                 },

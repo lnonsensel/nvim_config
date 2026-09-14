@@ -54,6 +54,23 @@ local groups = {
 	"NotifyDEBUGBorder",
 }
 
-for _, name in ipairs(groups) do
-	make_transparent(name)
+local function apply()
+	for _, name in ipairs(groups) do
+		make_transparent(name)
+	end
 end
+
+-- Раньше файл просто выполнял цикл один раз при старте, поэтому любая смена
+-- colorscheme (в т.ч. hot-reload темы omarchy) возвращала фон: colorscheme
+-- переопределяет highlight-группы целиком. Вешаемся на ColorScheme, чтобы
+-- прозрачность восстанавливалась сама.
+--
+-- augroup с clear=true делает повторный :source этого файла идемпотентным.
+vim.api.nvim_create_augroup("UserTransparency", { clear = true })
+vim.api.nvim_create_autocmd("ColorScheme", {
+	group = "UserTransparency",
+	callback = apply,
+})
+
+-- На случай, если colorscheme уже применён к моменту загрузки этого файла.
+apply()
